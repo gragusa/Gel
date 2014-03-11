@@ -1,9 +1,6 @@
 using NLopt
 using Debug
-using Calculus
 using Base.LinAlg.BLAS
-using DualNumbers
-using NLsolve
 
 function randiv(n::Int64        = 100;
                 m::Int64        = 5,
@@ -219,20 +216,12 @@ function inner(g, inneropt::NLopt.Opt, gel::Gel)
 end
 
 
-y,x,z = randiv(200, k=2);
+y,x,z = randiv(200);
 inneropt_ = NLopt.Opt(:LD_TNEWTON_PRECOND_RESTART, 5+1);
 outeropt_ = NLopt.Opt(:LD_TNEWTON_PRECOND_RESTART, 1);
 
-function momfun_{T <: Real}(theta::Vector{T})
+function momfun_(theta::Vector)
     z.*(y-x*theta)
-end
-
-function smomfun{T <: Real}(theta::Vector{T})
-    sum(z.*(y-x*theta),1)[:]
-end
-
-function f!{T <: Real}(x::Vector{T}, fx::Function)
-    fx(x)
 end
 
 function dmomfun_(theta::Vector, w::Vector)
@@ -245,26 +234,4 @@ end
 
 theta_init = [.02];
 
-@time et_est = estgel(theta_init, momfun_, dmomfun_, inneropt_, outeropt_)
-
-f!(dualin, dualout)
-
-
-
-k = 2
-m = 5
-dualin = Array(Dual{Real},k)
-dualout = Array(Dual{Real},m)
-
-function f!{T <: Number}(theta::Vector{T}, fx::Vector{T})
-    fx[:] = sum(z.*(y-x*theta),1)[:]
-    
-end
-
-f!([.02,.02], [0.,0.,0.,0.,0.])
-
-jac = zeros(5,2)
-
-NLsolve.autodiff(f!, [.2,.2], jac, dualin, dualout)
-
-
+et_est = estgel(theta_init, momfun_, dmomfun_, inneropt_, outeropt_)
